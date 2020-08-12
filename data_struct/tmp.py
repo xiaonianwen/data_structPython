@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 """
     @Author mantou
-    @Date 2020/8/11 23:04
+    @Date 2020/8/12 21:31
     @Describe 
 """
 
-print("hello")
+a = []
+a[0] = 1
+print a
