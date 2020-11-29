@@ -75,7 +75,9 @@ def get_responeJson(path,type):
         respone.raise_for_status()
     return respone.json()
 
-def get_all_dict(path):
+
+
+def get_all_dict(path,root_tree:hdfsTree):
     base_res = get_responeJson(path,LISTSTATUS)
     for item in base_res["FileStatuses"]["FileStatus"]:
         owner            = item["owner"]
@@ -87,23 +89,30 @@ def get_all_dict(path):
 
         if parse.r == False : #不递归调用
             hdfsnode = hdfsNode(owner,modificationTime,type,length,chldrenNum,pathSuffix)
+            root_tree.insert(hdfsnode)
             res_dict["%s/%s"%(path,pathSuffix)] = hdfsnode
         elif parse.r and type == "FILE": #递归查询，只返回文件
             hdfsnode = hdfsNode(owner,modificationTime,type,length,chldrenNum,pathSuffix)
+            root_tree.insert(hdfsnode)
             res_dict["%s/%s"%(path,pathSuffix)] = hdfsnode
         else:
-            get_all_dict("%s/%s"%(path,pathSuffix))
+            hdfsnode = hdfsNode(owner,modificationTime,type,length,chldrenNum,pathSuffix)
+            hdfsnode.childrenNode = hdfsTree()
+            root_tree.insert(hdfsnode)
+            get_all_dict("%s/%s"%(path,pathSuffix),hdfsnode.childrenNode)
 
 
 
 def main():
+    root = hdfsTree()
     path = parse.d
-    get_all_dict(path)
+    get_all_dict(path,root)
     for k,v in res_dict.items():
         file_path = k
         v.Nprint(file_path)
 
 res_dict = {}
+root_hdfs = hdfsTree()
 LISTSTATUS    = "LISTSTATUS"
 GETFILESTATUS = "GETFILESTATUS"
 url="http://bigdata-002:50070/webhdfs/v1{path}?op={type}"
@@ -116,6 +125,7 @@ parse = parser.parse_args()
 parse.d = parse.d if parse.d == "/" else parse.d.rstrip("/")
 
 if __name__ == '__main__':
+
    main()
    print(parse)
 
